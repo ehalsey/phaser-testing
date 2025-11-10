@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.parcel-cache/
+
+# Test files
+test-visual.mjs
+screenshot-*.png
+videos/
+
+# IDE
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

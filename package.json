@@ -1,0 +1,27 @@
+{
+  "name": "phaser-testing",
+  "version": "1.0.0",
+  "description": "Test Phaser TypeScript project",
+  "scripts": {
+    "dev": "vite --port 3456 --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "phaser",
+    "typescript",
+    "game"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.12.0",
+    "playwright": "^1.56.1",
+    "process": "^0.11.10",
+    "typescript": "^5.6.2",
+    "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  }
+}
