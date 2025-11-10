@@ -28,62 +28,70 @@ function resetGem(gem: Phaser.GameObjects.Image) {
 }
 
 function explodeGem(self: Phaser.Scene, gem: Phaser.GameObjects.Image) {
-    // 1. IMPACT: Screen shake
-    self.cameras.main.shake(280, 0.012);
+    // 1. IMPACT: Light screen shake
+    self.cameras.main.shake(150, 0.008);
 
-    // 2. Gem animation: wobble, spin, grow slightly, then vanish
-    self.tweens.chain({
-        targets: gem,
-        tweens: [
-            // Quick wobble
-            {
-                scaleX: 0.27,
-                scaleY: 0.37,
-                duration: 80,
-                yoyo: true,
-                repeat: 1,
-                ease: 'Sine.inOut'
-            },
-            // Grow to about 2x size and spin
-            {
-                scale: 0.64,
-                rotation: Math.PI * 2,
-                duration: 400,
-                ease: 'Back.easeOut',
-                onComplete: () => {
-                    // Explode particles RIGHT when gem finishes growing
-                    const emitter = self.add.particles(0, 0, 'blue-gem', {
-                        x: gem.x,
-                        y: gem.y,
-                        speed: { min: 200, max: 400 },
-                        angle: { min: 0, max: 360 },
-                        scale: { start: 0.25, end: 0 },
-                        lifespan: 1200,
-                        gravityY: 400,
-                        quantity: 50,
-                        frequency: -1,
-                        blendMode: 'ADD'
-                    });
+    // Hide the gem immediately
+    gem.setAlpha(0);
 
-                    emitter.explode(50);
+    // Define 5 polygon shards with different shapes - MUCH LARGER
+    const shardShapes = [
+        // Left-top triangle
+        { points: [0, -25, -20, 18, 10, 12], offsetX: -60, offsetY: -20, angle: -90 },
+        // Left-bottom triangle
+        { points: [-18, -15, 5, 12, -22, 20], offsetX: -60, offsetY: 20, angle: -120 },
+        // Center diamond
+        { points: [0, -30, 18, 0, 0, 30, -18, 0], offsetX: 0, offsetY: 30, angle: 180 },
+        // Right-top triangle
+        { points: [0, -25, 20, 18, -10, 12], offsetX: 60, offsetY: -20, angle: 90 },
+        // Right-bottom triangle
+        { points: [18, -15, -5, 12, 22, 20], offsetX: 60, offsetY: 20, angle: 120 }
+    ];
 
-                    // Destroy emitter after particles die
-                    self.time.delayedCall(1500, () => emitter.destroy());
-                }
-            },
-            // Shrink and fade out quickly (gem shatters)
-            {
-                alpha: 0,
-                scale: 0,
-                duration: 150,
-                ease: 'Power2.in',
-                onComplete: () => {
-                    // Reset gem after particles finish
-                    self.time.delayedCall(900, () => resetGem(gem));
-                }
-            }
-        ]
+    const shards: Phaser.GameObjects.Graphics[] = [];
+
+    shardShapes.forEach((shard) => {
+        // Create a graphic shard with irregular triangle shape
+        const graphic = self.add.graphics();
+        graphic.fillStyle(0x4488ff, 0.95); // Blue gem color
+
+        // Draw polygon from points array
+        const poly = new Phaser.Geom.Polygon(shard.points);
+        graphic.fillPoints(poly.points, true);
+
+        // Add white outline
+        graphic.lineStyle(2, 0xffffff, 0.9);
+        graphic.strokePoints(poly.points, true);
+
+        graphic.setPosition(gem.x, gem.y);
+        graphic.setDepth(10);
+        shards.push(graphic);
+
+        // Animate each shard - horizontal and vertical movement
+        self.tweens.add({
+            targets: graphic,
+            x: gem.x + shard.offsetX,
+            y: gem.y + shard.offsetY,
+            rotation: (shard.angle * Math.PI) / 180,
+            alpha: 0,
+            duration: 1200,
+            ease: 'Power2.out'
+        });
+
+        // Add gravity effect - falls down further
+        self.tweens.add({
+            targets: graphic,
+            y: gem.y + shard.offsetY + 300,
+            duration: 1200,
+            ease: 'Quad.in'
+        });
+
+        // Remove shard after animation
+        self.time.delayedCall(1200, () => graphic.destroy());
     });
+
+    // Reset gem after shards settle
+    self.time.delayedCall(1300, () => resetGem(gem));
 }
 
 const config: Phaser.Types.Core.GameConfig = {
